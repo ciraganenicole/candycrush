@@ -1,0 +1,373 @@
+.game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.game-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: min(500px, 90vw);
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.level-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.level {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: bold;
+  color: #4a5568;
+}
+
+.target {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: #718096;
+}
+
+.score, .moves {
+  font-size: clamp(0.875rem, 2.25vw, 1rem);
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: min(0.5vw, 4px);
+  background: rgba(255, 255, 255, 0.9);
+  padding: min(1vw, 0.5rem);
+  border-radius: 1rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: fit-content;
+}
+
+.row {
+  display: flex;
+  gap: min(0.5vw, 4px);
+}
+
+.candy {
+  width: min(6vw, 48px);
+  height: min(6vw, 48px);
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: min(1vw, 8px);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.2s ease;
+  box-shadow: 
+    inset -1px -1px 4px rgba(0, 0, 0, 0.2),
+    inset 1px 1px 4px rgba(255, 255, 255, 0.2),
+    0 2px 4px rgba(0, 0, 0, 0.15);
+  background: #ffffff;
+}
+
+/* Red Jelly Bean */
+.candy.red-jelly {
+  background: radial-gradient(circle at 30% 30%, 
+    #ffb3b3 0%, 
+    #ff4d4d 40%, 
+    #cc0000 100%
+  ) !important;
+  border: 2px solid #ff6666;
+}
+
+/* Yellow Lemon Drop */
+.candy.yellow-lemon {
+  background: radial-gradient(circle at 30% 30%, 
+    #fff5b3 0%, 
+    #ffd700 40%, 
+    #cc9900 100%
+  ) !important;
+  border: 2px solid #ffdb4d;
+}
+
+/* Purple Cluster */
+.candy.purple-grape {
+  background: radial-gradient(circle at 30% 30%, 
+    #e6b3ff 0%, 
+    #9933ff 40%, 
+    #6600cc 100%
+  ) !important;
+  border: 2px solid #bf80ff;
+}
+
+/* Green Square */
+.candy.green-apple {
+  background: radial-gradient(circle at 30% 30%, 
+    #b3ffb3 0%, 
+    #33cc33 40%, 
+    #009900 100%
+  ) !important;
+  border: 2px solid #66ff66;
+}
+
+/* Orange Lozenge */
+.candy.orange-candy {
+  background: radial-gradient(circle at 30% 30%, 
+    #ffd9b3 0%, 
+    #ff9933 40%, 
+    #cc6600 100%
+  ) !important;
+  border: 2px solid #ffb366;
+}
+
+/* Blue Lollipop Head */
+.candy.blue-lollipop {
+  background: radial-gradient(circle at 30% 30%, 
+    #b3e6ff 0%, 
+    #3399ff 40%, 
+    #0066cc 100%
+  ) !important;
+  border: 2px solid #66b3ff;
+}
+
+/* Add shine effect to all candies */
+.candy::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 20%;
+  height: 20%;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+/* Special candy styles */
+.candy.striped_h {
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.5) 0px,
+    rgba(255, 255, 255, 0.5) 6px,
+    transparent 6px,
+    transparent 12px
+  ) !important;
+}
+
+.candy.striped_v {
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.5) 0px,
+    rgba(255, 255, 255, 0.5) 6px,
+    transparent 6px,
+    transparent 12px
+  ) !important;
+}
+
+.candy.wrapped {
+  overflow: visible;
+}
+
+.candy.wrapped::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: transparent;
+  border: 2px dashed rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  animation: rotate 4s linear infinite;
+  pointer-events: none;
+}
+
+.candy.color_bomb {
+  background: radial-gradient(circle at center,
+    #1a1a1a 0%,
+    #333333 40%,
+    #666666 60%,
+    #999999 80%,
+    #cccccc 100%
+  ) !important;
+  border: 2px solid #ffffff;
+  overflow: visible;
+}
+
+.candy.color_bomb::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    #ff6b6b,
+    #4dabf7,
+    #51cf66,
+    #ffd43b,
+    #b197fc,
+    #ff6b6b
+  );
+  border-radius: 12px;
+  z-index: -1;
+  animation: rotate 2s linear infinite;
+  background-size: 200% 200%;
+  pointer-events: none;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Enhanced hover effects */
+.candy:hover {
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.candy:active {
+  transform: scale(0.95);
+}
+
+/* Match animation */
+@keyframes match {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.candy.matching {
+  animation: match 0.3s ease-out forwards;
+}
+
+/* Swap animation */
+@keyframes swap {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.candy.swapping {
+  animation: swap 0.3s ease-in-out;
+}
+
+.empty {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.empty::after,
+.empty::before {
+  display: none !important;
+}
+
+.level-complete, .game-over {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255, 255, 255, 0.95);
+  padding: clamp(1rem, 4vw, 2rem);
+  border-radius: 1rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: min(90vw, 400px);
+}
+
+.level-complete h2, .game-over h2 {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  color: #4a5568;
+  margin-bottom: 1rem;
+}
+
+.level-complete p, .game-over p {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.level-complete button, .game-over button {
+  background: linear-gradient(135deg, #4dabf7 0%, #339af0 100%);
+  color: white;
+  border: none;
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+  border-radius: 0.5rem;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.level-complete button:hover, .game-over button:hover {
+  background: linear-gradient(135deg, #339af0 0%, #228be6 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.level-complete button:active, .game-over button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Add media queries for smaller screens */
+@media screen and (max-width: 480px) {
+  .game-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem;
+  }
+
+  .level-info {
+    margin-bottom: 0.5rem;
+  }
+
+  .score, .moves {
+    margin: 0.25rem 0;
+  }
+}
+
+/* Add touch-friendly styles for mobile */
+@media (hover: none) {
+  .candy:hover {
+    transform: none;
+  }
+  
+  .candy:active {
+    transform: scale(0.95);
+  }
+} 
