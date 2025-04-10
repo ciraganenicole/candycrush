@@ -175,60 +175,56 @@ export const GameBoard: React.FC = () => {
     const absDeltaX = Math.abs(deltaX);
     const absDeltaY = Math.abs(deltaY);
 
-    // Decrease moves for any attempted swap
-    setMovesLeft(prev => prev - 1);
-
-    if (absDeltaX > 30 || absDeltaY > 30) {
+    // Only process if it's a valid swipe
+    if (absDeltaX > 10 || absDeltaY > 10) {
       let targetRow = touchStart.current.row;
       let targetCol = touchStart.current.col;
 
+      // Determine swipe direction
       if (absDeltaX > absDeltaY) {
         targetCol += deltaX > 0 ? 1 : -1;
       } else {
         targetRow += deltaY > 0 ? 1 : -1;
       }
 
+      // Check if the target position is valid
       if (targetRow >= 0 && targetRow < GRID_SIZE && targetCol >= 0 && targetCol < GRID_SIZE) {
-        const isAdjacent = (
-          (Math.abs(touchStart.current.row - targetRow) === 1 && touchStart.current.col === targetCol) ||
-          (Math.abs(touchStart.current.col - targetCol) === 1 && touchStart.current.row === targetRow)
-        );
+        // Decrease moves only for valid swipes
+        setMovesLeft(prev => prev - 1);
 
-        if (isAdjacent) {
-          // Add swapping animation
-          setSwappingCandies(new Set([
-            `${touchStart.current.row}-${touchStart.current.col}`,
-            `${targetRow}-${targetCol}`
-          ]));
+        // Add swapping animation
+        setSwappingCandies(new Set([
+          `${touchStart.current.row}-${touchStart.current.col}`,
+          `${targetRow}-${targetCol}`
+        ]));
 
-          const newBoard = [...board];
-          const temp = newBoard[touchStart.current.row][touchStart.current.col];
-          newBoard[touchStart.current.row][touchStart.current.col] = newBoard[targetRow][targetCol];
-          newBoard[targetRow][targetCol] = temp;
+        // Create a deep copy of the board
+        const newBoard = board.map(row => [...row]);
+        const temp = newBoard[touchStart.current.row][touchStart.current.col];
+        newBoard[touchStart.current.row][touchStart.current.col] = newBoard[targetRow][targetCol];
+        newBoard[targetRow][targetCol] = temp;
+
+        // Check for matches
+        const matches = findMatches(newBoard);
+        if (matches.length > 0) {
+          // Add matching animation
+          const matchingIds = new Set(matches.map(({row, col}) => `${row}-${col}`));
+          setMatchingCandies(matchingIds);
+          
+          // Wait for animation to complete
+          await new Promise(resolve => setTimeout(resolve, 300));
+          await handleMatches(matches, newBoard);
+        } else {
+          // If no matches, swap back
+          await new Promise(resolve => setTimeout(resolve, 300));
+          newBoard[touchStart.current.row][touchStart.current.col] = temp;
+          newBoard[targetRow][targetCol] = newBoard[touchStart.current.row][touchStart.current.col];
           setBoard(newBoard);
-
-          const matches = findMatches(newBoard);
-          if (matches.length > 0) {
-            // Add matching animation
-            const matchingIds = new Set(matches.map(({row, col}) => `${row}-${col}`));
-            setMatchingCandies(matchingIds);
-            
-            // Wait for animation to complete
-            await new Promise(resolve => setTimeout(resolve, 300));
-            await handleMatches(matches, newBoard);
-          } else {
-            // If no matches, swap back
-            await new Promise(resolve => setTimeout(resolve, 300));
-            const swappedBack = [...newBoard];
-            swappedBack[touchStart.current.row][touchStart.current.col] = temp;
-            swappedBack[targetRow][targetCol] = newBoard[touchStart.current.row][touchStart.current.col];
-            setBoard(swappedBack);
-          }
-
-          // Clear animations
-          setSwappingCandies(new Set());
-          setMatchingCandies(new Set());
         }
+
+        // Clear animations
+        setSwappingCandies(new Set());
+        setMatchingCandies(new Set());
       }
     }
 
@@ -365,8 +361,8 @@ export const GameBoard: React.FC = () => {
   };
 
   const handleMatches = async (matches: { row: number; col: number }[], currentBoard: Candy[][]) => {
-    // Remove matched candies with animation
-    const newBoard = [...currentBoard];
+    // Create a deep copy of the board
+    const newBoard = currentBoard.map(row => [...row]);
     let specialCandyCreated = false;
 
     // Handle special candies first
@@ -395,14 +391,11 @@ export const GameBoard: React.FC = () => {
       let specialType = SpecialCandyType.NONE;
 
       if (matches.length === 4) {
-        // Create striped candy
         const isHorizontal = matches.every(m => m.row === centerMatch.row);
         specialType = isHorizontal ? SpecialCandyType.STRIPED_H : SpecialCandyType.STRIPED_V;
       } else if (matches.length === 5) {
-        // Create wrapped candy
         specialType = SpecialCandyType.WRAPPED;
       } else if (matches.length >= 6) {
-        // Create color bomb
         specialType = SpecialCandyType.COLOR_BOMB;
       }
 
@@ -412,7 +405,7 @@ export const GameBoard: React.FC = () => {
       }
     }
 
-    // Update score with bonus for special candies
+    // Update score
     const baseScore = matches.length * 10;
     const specialBonus = specialCandyCreated ? 50 : 0;
     const newScore = score + baseScore + specialBonus;
@@ -424,26 +417,30 @@ export const GameBoard: React.FC = () => {
       return;
     }
 
-    // Shift candies down with animation
+    // Create a temporary board for shifting
+    const tempBoard = Array(GRID_SIZE).fill(null).map(() => 
+      Array(GRID_SIZE).fill(null).map(() => ({
+        color: '',
+        id: '',
+        specialType: SpecialCandyType.NONE
+      }))
+    );
+
+    // Shift candies down column by column
     for (let col = 0; col < GRID_SIZE; col++) {
-      let emptyRow = GRID_SIZE - 1;
+      let writeIndex = GRID_SIZE - 1;
+      
+      // Move existing candies down
       for (let row = GRID_SIZE - 1; row >= 0; row--) {
         if (newBoard[row][col].color !== '') {
-          if (emptyRow !== row) {
-            newBoard[emptyRow][col] = newBoard[row][col];
-            newBoard[row][col] = {
-              color: '',
-              id: `${row}-${col}`,
-              specialType: SpecialCandyType.NONE
-            };
-          }
-          emptyRow--;
+          tempBoard[writeIndex][col] = newBoard[row][col];
+          writeIndex--;
         }
       }
-
+      
       // Fill empty spaces with new candies
-      for (let row = emptyRow; row >= 0; row--) {
-        newBoard[row][col] = {
+      for (let row = writeIndex; row >= 0; row--) {
+        tempBoard[row][col] = {
           color: CANDY_COLORS[Math.floor(Math.random() * CANDY_COLORS.length)],
           id: `${row}-${col}-${Math.random()}`,
           specialType: SpecialCandyType.NONE
@@ -451,13 +448,14 @@ export const GameBoard: React.FC = () => {
       }
     }
 
-    setBoard(newBoard);
+    // Update the board with the new state
+    setBoard(tempBoard);
 
-    // Check for new matches after refilling
-    const newMatches = findMatches(newBoard);
+    // Check for new matches
+    const newMatches = findMatches(tempBoard);
     if (newMatches.length > 0) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      await handleMatches(newMatches, newBoard);
+      await handleMatches(newMatches, tempBoard);
     } else if (movesLeft <= 0) {
       setGameOver(true);
     }
@@ -495,9 +493,9 @@ export const GameBoard: React.FC = () => {
         <div className="moves">Moves Left: {movesLeft}</div>
       </div>
       <div className="board">
-        {board.map((row, rowIndex) => (
+        {board.slice(0, GRID_SIZE).map((row, rowIndex) => (
           <div key={rowIndex} className="row">
-            {row.map((candy, colIndex) => {
+            {row.slice(0, GRID_SIZE).map((candy, colIndex) => {
               const candyId = `${rowIndex}-${colIndex}`;
               const isMatching = matchingCandies.has(candyId);
               const isSwapping = swappingCandies.has(candyId);
